@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-17",
+  "version": "0.2.1",
+  "source_commit": "84b73ed",
+  "main_workflow": "https://github.com/biliybiliy826/reed-reader/actions/runs/44072382695",
+  "verified_distributions": [
+    "Ubuntu 22.04 x86_64",
+    "Ubuntu 24.04 x86_64"
+  ],
+  "checks": [
+    "75 pytest tests",
+    "ruff",
+    "relocated bundled Python",
+    "TXT EPUB MOBI original fixtures",
+    "WebEngine local Canvas",
+    "transparent mode",
+    "hide stays hidden",
+    "CLI IPC and quit",
+    "Debian apt installation",
+    "desktop entry validation",
+    "portable relocation with spaces",
+    "uninstall preserves user data",
+    "SHA256 download check"
+  ],
+  "local_native_platform": "Ubuntu 24.04 xcb",
+  "local_deb_root_ownership": true,
+  "user_home_in_payload": false,
+  "account_data_used": false,
+  "release_publication": "public",
+  "release_url": "https://github.com/biliybiliy826/reed-reader/releases/tag/v0.2.1",
+  "release_workflow": "https://github.com/biliybiliy826/reed-reader/actions/runs/44073238308",
+  "release_conclusion": "success",
+  "asset_checksums_verified": [
+    "THIRD_PARTY_SOURCES.md",
+    "build-manifest.json",
+    "pyside-source-6.12.0.tar.xz",
+    "python-build-standalone-20260602.tar.gz",
+    "qt-everywhere-src-6.12.0.tar.xz",
+    "reed-reader-0.2.1-linux-x86_64.tar.gz",
+    "reed-reader_0.2.1_amd64.deb",
+    "reed_reader-0.2.1-py3-none-any.whl",
+    "reed_reader-0.2.1.tar.gz"
+  ],
+  "deb_size_bytes": 209343384,
+  "portable_size_bytes": 298069080
+}
