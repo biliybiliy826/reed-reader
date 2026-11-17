@@ -1,0 +1,16 @@
+{
+  "mini_size": [
+    640,
+    220
+  ],
+  "independent_reader": true,
+  "x11_global_shortcut": [
+    "probe"
+  ],
+  "single_instance_ipc": [
+    {
+      "command": "toggle"
+    }
+  ],
+  "owned_window_opacity_set_and_reset": true
+}

@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "reed-reader"
+version = "0.1.0"
+description = "苇读 — Linux 原生、离线优先的轻量隐蔽阅读器"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "GPL-3.0-only"
+authors = [{name = "Reed Reader contributors"}]
+dependencies = [
+  "PySide6-Essentials>=6.8,<7",
+  "charset-normalizer>=3.4,<4",
+  "defusedxml>=0.7,<1",
+  "mobi==0.4.1",
+  "python-xlib>=0.33,<1; sys_platform == 'linux'",
+]
+
+[project.scripts]
+reed-reader = "reed_reader.app:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.11", "build>=1.2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+qt_api = "pyside6"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/reed_reader"]
