@@ -1,0 +1,122 @@
+name: Linux release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.15'
+          python-version: '3.13.13'
+          enable-cache: true
+      - name: Install build and Qt runtime prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libopengl0 libnss3 libasound2 libgbm1 libxkbcommon-x11-0 libxcb-cursor0
+      - name: Check tagged version
+        env:
+          RELEASE_REF: ${{ github.ref_name }}
+          RELEASE_REF_TYPE: ${{ github.ref_type }}
+        run: |
+          uv run --no-project python - <<'PY'
+          import os, tomllib
+          from pathlib import Path
+          version = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
+          if os.environ['RELEASE_REF_TYPE'] == 'tag':
+              assert os.environ['RELEASE_REF'] == 'v' + version, 'tag/package version mismatch'
+          PY
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: QT_QPA_PLATFORM=offscreen uv run pytest -q
+      - name: Build and verify relocatable packages
+        run: uv run python scripts/package_linux.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-release-assets
+          path: dist/linux/*
+          compression-level: 0
+          retention-days: 3
+          if-no-files-found: error
+
+  install:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-release-assets
+          path: assets
+      - name: Check downloaded assets
+        run: cd assets && sha256sum --check SHA256SUMS
+      - name: Install Debian package and validate desktop entry
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ./assets/reed-reader_*_amd64.deb xvfb desktop-file-utils
+          /usr/bin/reed-reader --version
+          desktop-file-validate /usr/share/applications/reed-reader.desktop
+          test -x /opt/reed-reader/runtime/bin/python3
+      - name: Test installed GUI, WebEngine, formats, and IPC
+        run: |
+          xvfb-run -a /opt/reed-reader/runtime/bin/python3 -I scripts/verify_package.py /opt/reed-reader
+      - name: Test relocated portable archive
+        run: |
+          mkdir -p "$RUNNER_TEMP/portable path"
+          tar -xzf assets/reed-reader-*-linux-x86_64.tar.gz -C "$RUNNER_TEMP/portable path"
+          for bundle in "$RUNNER_TEMP/portable path"/reed-reader-*; do
+            xvfb-run -a "$bundle/runtime/bin/python3" -I scripts/verify_package.py "$bundle"
+          done
+      - name: Verify uninstall preserves user data
+        run: |
+          mkdir -p "$HOME/.local/share/reed-reader"
+          printf 'preserve-user-data\n' > "$HOME/.local/share/reed-reader/package-test-marker"
+          sudo apt-get remove -y reed-reader
+          test ! -e /opt/reed-reader/reed-reader
+          test ! -e /usr/share/applications/reed-reader.desktop
+          test -f "$HOME/.local/share/reed-reader/package-test-marker"
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [build, install]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-release-assets
+          path: assets
+      - name: Publish verified release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' > "$RUNNER_TEMP/release-state"; then
+            test "$(cat "$RUNNER_TEMP/release-state")" = true || { echo 'Refusing to replace a published release'; exit 1; }
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "苇读 $RELEASE_TAG · Linux 安装包" \
+              --notes-file packaging/RELEASE_NOTES.md
+          fi
+          gh release upload "$RELEASE_TAG" assets/* --clobber
+          gh release edit "$RELEASE_TAG" --draft=false --latest

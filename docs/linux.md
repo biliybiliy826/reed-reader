@@ -1,5 +1,26 @@
 # Linux 使用、安装与发布
 
+## 推荐：下载安装包
+
+从 [Releases](https://github.com/biliybiliy826/reed-reader/releases/latest) 下载 `reed-reader_0.2.1_amd64.deb`：
+
+```bash
+sudo apt install ./reed-reader_0.2.1_amd64.deb
+reed-reader
+```
+
+使用 apt 安装本地文件可以自动补齐系统库；不要只双击解压 deb。包内自带独立 Python、Qt/WebEngine 和 Python 依赖，无需源码目录、uv、pip 或系统 Python。首次 apt 安装可能需要联网下载系统依赖。程序位于 `/opt/reed-reader`，命令为 `/usr/bin/reed-reader`，应用菜单名“苇读”。
+
+发布流水线在 Ubuntu 22.04 / 24.04 x86_64 验证安装、启动、格式导入、WebEngine 原创本地网页渲染及卸载。最低 glibc 2.34；其他 Debian 系系统未逐一验证。当前没有 ARM/RPM/AppImage 包，Wayland 尚未做真实桌面验证。
+
+便携版：下载 `reed-reader-0.2.1-linux-x86_64.tar.gz`，完整解压后运行目录内 `./reed-reader`。目录可以移动，仍需要系统图形/音频/NSS 库，具体列表见 `packaging/debian-depends.txt`；不能用于 Alpine/musl。不要只复制启动脚本而丢弃 runtime。
+
+更新时先退出苇读，再 `sudo apt install ./新版.deb`。卸载：`sudo apt remove reed-reader`。安装/更新/卸载均不删除用户书籍、进度、设置和网页登录数据。
+
+若以前使用源码安装，`~/.local/bin/reed-reader` 或 `~/.local/share/applications/reed-reader.desktop` 可能优先于系统版。先执行 `/usr/bin/reed-reader --version` 确认安装包版本；确认旧文件由本项目的源码安装脚本创建后，可自行移除旧入口，再从菜单启动。安装包不会自动修改这些用户文件。
+
+下载核对：`sha256sum --check SHA256SUMS`（需把清单内文件全部下载；只下载 deb 时可对照其单项 SHA256）。用户只需选择 deb 或便携包，Qt/PySide 源码附件供开发及许可证合规使用，不是运行必需文件。
+
 ## 环境
 
 Python 3.11+，Linux 桌面，优先使用 X11。依赖通过 `uv sync --locked` 安装。当前机器实际验证环境为 x86_64 Linux、X11、Python 3.13.13、Qt/PySide Essentials 6.12.0。
@@ -62,7 +83,7 @@ Wayland 自定义快捷键命令（若命令不在 PATH，使用完整路径）�
 
 `uv build` 生成带 LICENSE 的源码 tar.gz 和应用 wheel。源码包包含测试、锁文件、文档、安装脚本和 GitHub Actions 工作流。源码按 GPL-3.0-only 许可；依赖说明见 `THIRD_PARTY.md`。
 
-公开源码仓库：[biliybiliy826/reed-reader](https://github.com/biliybiliy826/reed-reader)。版本使用 Git 标签标记；可从对应标签下载源码并按上述步骤安装。不要将用户数据目录、书籍、密钥或 `.venv` 加入仓库。
+公开源码仓库：[biliybiliy826/reed-reader](https://github.com/biliybiliy826/reed-reader)。版本使用 Git 标签标记；安装包由 [release.yml](../.github/workflows/release.yml) 构建、在干净 runner 安装验证，再上传 Release。构建方式和运行目录边界见 [打包说明](packaging.md)。不要将用户数据目录、书籍、密钥或 `.venv` 加入仓库。
 
 卸载桌面入口只需删除本项目创建的 `~/.local/bin/reed-reader`、`~/.local/share/applications/reed-reader.desktop` 和 `~/.local/share/icons/hicolor/scalable/apps/reed-reader.svg`（若设置 XDG_DATA_HOME 则使用对应位置）。保留数据即可保留书架；不会自动删除用户数据。
 

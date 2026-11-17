@@ -12,6 +12,7 @@ from PySide6.QtGui import QKeySequence
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon, QWidget
 
+from . import __version__
 from .jobs import Jobs
 from .mouse_shortcut import MiddleButtonShortcut
 from .platform import GlobalKeys
@@ -258,6 +259,7 @@ class Application(QObject):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="苇读 · Linux 原生轻量阅读器")
+    parser.add_argument("--version", action="version", version=f"Reed Reader {__version__}")
     parser.add_argument("files", nargs="*", help="导入 TXT / EPUB / MOBI")
     group = parser.add_mutually_exclusive_group()
     for action in ("toggle", "hide", "next", "previous", "show", "mini", "demo", "weread", "quit"):

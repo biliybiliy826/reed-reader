@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Reed Reader
+Name[zh_CN]=苇读
+Comment=A stealth reader for Linux with WeRead integration
+Comment[zh_CN]=Linux 摸鱼阅读器：透明文字悬浮、一键隐藏，支持微信读书
+Exec=reed-reader %F
+Icon=reed-reader
+Terminal=false
+Categories=Office;Viewer;
+MimeType=text/plain;application/epub+zip;application/x-mobipocket-ebook;
+StartupNotify=true
+StartupWMClass=reed-reader

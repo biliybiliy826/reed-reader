@@ -1,0 +1,46 @@
+ca-certificates
+libc6 (>= 2.34)
+libstdc++6 (>= 11)
+libgcc-s1
+libegl1
+libgl1
+libopengl0
+libglib2.0-0t64 | libglib2.0-0
+libdbus-1-3
+libfontconfig1
+libfreetype6
+libnss3
+libnspr4
+libasound2t64 | libasound2
+libcups2t64 | libcups2
+libgbm1
+libudev1
+libx11-6
+libx11-xcb1
+libxcomposite1
+libxdamage1
+libxext6
+libxfixes3
+libxrandr2
+libxtst6
+libxkbfile1
+libxkbcommon0
+libxkbcommon-x11-0
+libxcb1
+libxcb-cursor0
+libxcb-dri3-0
+libxcb-icccm4
+libxcb-image0
+libxcb-keysyms1
+libxcb-randr0
+libxcb-render0
+libxcb-render-util0
+libxcb-shape0
+libxcb-shm0
+libxcb-sync1
+libxcb-xfixes0
+libxcb-xkb1
+libwayland-client0
+libwayland-cursor0
+libwayland-egl1
+zlib1g

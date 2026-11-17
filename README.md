@@ -16,6 +16,21 @@ A stealth reader for Linux — read novels discreetly at work, with transparent 
 
 ## 开始使用
 
+### 下载安装包（推荐）
+
+前往 [GitHub Releases](https://github.com/biliybiliy826/reed-reader/releases/latest)，下载 `reed-reader_0.2.1_amd64.deb`：
+
+```bash
+sudo apt install ./reed-reader_0.2.1_amd64.deb
+```
+
+安装后从应用菜单打开“苇读”。自带 Python、Qt 和微信读书浏览器组件，不需要 uv/pip。
+面向 Ubuntu 22.04 / 24.04 x86_64；其他 Debian 系发行版尚未逐一验证。也提供免安装的 `linux-x86_64.tar.gz`，解压后运行 `./reed-reader`。安装包较大，因为包含完整浏览器运行时。
+
+鼠标中键 / **F8** 隐藏，**Alt+V** 恢复。卸载使用 `sudo apt remove reed-reader`，保留个人书籍和设置。详细安装、更新及源码安装入口冲突处理见 [Linux 使用说明](docs/linux.md)。
+
+### 从源码运行
+
 ```bash
 # 需要 Python 3.11+ 和 uv
 git clone https://github.com/biliybiliy826/reed-reader.git

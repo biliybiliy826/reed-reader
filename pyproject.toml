@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "reed-reader"
-version = "0.2.0"
+version = "0.2.1"
 description = "苇读 — Linux 摸鱼阅读器：透明文字悬浮、一键隐藏，支持微信读书"
 readme = "README.md"
 requires-python = ">=3.11"

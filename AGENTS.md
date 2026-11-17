@@ -3,7 +3,7 @@
 Linux native reader, independent implementation inspired by publicly documented Fish-book features.
 
 - Map: `docs/README.md`; architecture: `docs/architecture.md`.
-- Active work and verification: `docs/weread-plan.md`; original foundation: `docs/implementation-plan.md`.
+- Active work: `docs/packaging-plan.md`; WeRead verification: `docs/weread-plan.md`; original foundation: `docs/implementation-plan.md`.
 - Runtime: `src/reed_reader/app.py`; start with `uv run reed-reader`.
 - Validate: `QT_QPA_PLATFORM=offscreen uv run pytest`; `uv run ruff check .`.
 - Local state lives in XDG_DATA_HOME/reed-reader, never in the repository.

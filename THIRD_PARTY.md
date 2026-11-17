@@ -15,6 +15,10 @@
 | six（python-xlib 依赖） | 兼容层 | MIT |
 | standard-imghdr（mobi 依赖） | Python 3.13+ 图像格式兼容 | PSF |
 
-本次分发是源代码包和应用 wheel，不捆绑 Qt 或 Python 二进制运行时。
+源码包和应用 wheel 不捆绑 Qt 或 Python 运行时。自 v0.2.1 起，`.deb` 和 Linux 便携包包含独立的 CPython（PSF 及其第三方许可）、PySide6/Qt/WebEngine 以及上述依赖；系统图形、音频、NSS 等共享库仍由发行版提供。
+
+二进制包内保留上游 wheel 的 `*.dist-info` 许可证文件，另在 `licenses/` 附带 Python、Qt/PySide 许可证及 Qt 源码中的第三方许可/归属声明，包括 Chromium。Qt/PySide 动态链接，用户可替换 `runtime/lib/python3.13/site-packages` 中的组件；没有修改上游库二进制。
+
+每次发布生成 `build-manifest.json`（确切版本、锁文件哈希和对应源码地址）与 `THIRD_PARTY_SOURCES.md`。Release 同时提供本项目源码、PySide 对应源码和 Qt 完整对应源码包；第三方源码下载入口与应用安装包位于同一个 Release，安装用户无需下载源码包。
 
 微信读书页面、标识和书籍由其官方服务器在运行时提供，不随本项目源代码或 wheel 分发。浏览器内核含 Chromium 等上游第三方组件，相关许可证与声明由 PySide6-WebEngine 包提供。
