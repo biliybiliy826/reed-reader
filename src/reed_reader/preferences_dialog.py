@@ -102,14 +102,20 @@ class PreferencesDialog(QDialog):
         keyboard = QWidget()
         form = QFormLayout(keyboard)
         for name, label in [("previous_key", "上一页"), ("next_key", "下一页"),
-                            ("toggle_key", "显示 / 隐藏阅读器"), ("panic_key", "立即隐藏所有窗口")]:
+                            ("toggle_key", "显示 / 隐藏阅读器"), ("panic_key", "立即隐藏所有窗口"),
+                            ("panic_alt_key", "隐藏备用键（默认 F8）")]:
             control = QKeySequenceEdit()
             control.setMaximumSequenceLength(1)
             self.controls[name] = control
             form.addRow(label, control)
+        middle = QCheckBox("鼠标中键全局隐藏（X11）")
+        self.controls["global_middle_hide"] = middle
+        form.addRow(middle)
         help_text = QLabel("X11：保存后立即注册全局快捷键，冲突会在书架状态栏提示。\n\n"
                            "Wayland：请在桌面设置中添加自定义快捷键，命令为：\n"
                            "reed-reader --toggle\nreed-reader --next\nreed-reader --previous\nreed-reader --hide\n\n"
+                           "中键在苇读窗口内始终隐藏；X11 可在其他应用内触发，不拦截其原有中键操作。\n"
+                           "F8 / Ctrl+Alt+H 只隐藏，Alt+V 恢复阅读。\n"
                            "窗口内快捷键：Ctrl+M 小窗、F11 沉浸、Ctrl+F 搜索、Ctrl+B 书签、Esc 隐藏。")
         help_text.setWordWrap(True)
         form.addRow(help_text)

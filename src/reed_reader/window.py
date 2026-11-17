@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from . import __version__
 from .demo import demo_book
 from .formats import import_file
 from .library_view import BookList
@@ -30,6 +31,7 @@ from .style import heading
 class MainWindow(QMainWindow):
     preferences_changed = Signal()
     exit_requested = Signal()
+    weread_requested = Signal()
 
     def __init__(self, library, settings, jobs, reader):
         super().__init__()
@@ -65,6 +67,11 @@ class MainWindow(QMainWindow):
             button.clicked.connect(action)
             side.addWidget(button)
             self.nav_buttons.append(button)
+        weread = QPushButton("微信读书  ↗")
+        weread.setObjectName("nav")
+        weread.setToolTip("在独立窗口打开微信读书官网，扫码登录后阅读")
+        weread.clicked.connect(self.weread_requested.emit)
+        side.addWidget(weread)
         side.addStretch()
         side.addWidget(heading("让阅读，轻一点。", "muted"))
         for label, action in [("阅读设置", self.preferences), ("使用说明", self.help), ("退出苇读", self.exit_requested.emit)]:
@@ -72,7 +79,7 @@ class MainWindow(QMainWindow):
             button.clicked.connect(action)
             side.addWidget(button)
         side.addSpacing(12)
-        side.addWidget(heading("v0.1.0  ·  GPL-3.0\n离线优先 / Linux 原生", "muted"))
+        side.addWidget(heading(f"v{__version__}  ·  GPL-3.0\n离线优先 / Linux 原生", "muted"))
         layout.addWidget(sidebar)
         self.stack = QStackedWidget()
         layout.addWidget(self.stack, 1)
@@ -287,10 +294,12 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "使用苇读", "导入：Ctrl+O 或拖入 TXT / EPUB / MOBI。\n"
                                 "阅读器：方向键 / 滚轮翻页，Ctrl+F 目录与搜索，Ctrl+B 加书签。\n"
                                 "Ctrl+M 切换小窗，F11 沉浸阅读，Esc 隐藏。\n"
-                                "默认全局键：Alt+Z 上页，Alt+C 下页，Alt+V 显隐，Ctrl+Alt+H 隐藏全部。\n\n"
+                                "默认全局键：Alt+Z 上页，Alt+C 下页，Alt+V 显隐，F8 / Ctrl+Alt+H / 鼠标中键隐藏全部。\n\n"
                                 "小窗拖动：拖拽顶部标题；缩放：右下角。\n"
                                 "关闭书架时有托盘则继续运行，无托盘则退出。\n"
                                 "网络：填写阅读 App 的 Web 服务地址；进度手动拉取 / 推送。\n\n"
+                                "微信读书：左侧入口打开官网，微信扫码后使用官方书架阅读。\n"
+                                "网页窗口支持小窗、透明度、置顶与隐藏；Alt+Z/C 发送 PageUp/PageDown，效果取决于官网阅读模式。\n\n"
                                 "本软件为独立开源实现，与 Fish-book 无隶属关系。\n许可证：GPL-3.0-only。")
 
     def dragEnterEvent(self, event):

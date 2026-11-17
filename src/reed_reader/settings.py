@@ -27,6 +27,8 @@ class Preferences:
     next_key: str = "Alt+C"
     toggle_key: str = "Alt+V"
     panic_key: str = "Ctrl+Alt+H"
+    panic_alt_key: str = "F8"
+    global_middle_hide: bool = True
 
     @classmethod
     def parse(cls, data: dict):
@@ -57,7 +59,7 @@ class Preferences:
                 raise ValueError(f"{name} 必须是 #RRGGBB 颜色。")
         if result.progress_position not in {"top", "bottom", "hidden"}:
             raise ValueError("无效的进度位置。")
-        keys = [result.previous_key, result.next_key, result.toggle_key, result.panic_key]
+        keys = [result.previous_key, result.next_key, result.toggle_key, result.panic_key, result.panic_alt_key]
         if len(set(keys)) != len(keys) or any(not k or len(k) > 60 for k in keys):
             raise ValueError("快捷键不能为空或重复。")
         return result

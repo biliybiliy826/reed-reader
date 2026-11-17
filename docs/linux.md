@@ -4,7 +4,7 @@
 
 Python 3.11+，Linux 桌面，优先使用 X11。依赖通过 `uv sync --locked` 安装。当前机器实际验证环境为 x86_64 Linux、X11、Python 3.13.13、Qt/PySide Essentials 6.12.0。
 
-若 Qt 提示 xcb 插件依赖缺失，Debian/Ubuntu 可安装 `libxcb-cursor0 libegl1 libopengl0`；中文缺字可安装 `fonts-noto-cjk`。不同发行版软件包名可能不同。
+若 Qt 提示 xcb 插件依赖缺失，Debian/Ubuntu 可安装 `libxcb-cursor0 libegl1 libopengl0 libnss3 libxss1 libasound2t64`（较旧 Ubuntu 使用 `libasound2`）；中文缺字可安装 `fonts-noto-cjk`。不同发行版软件包名可能不同。
 
 ## 安装到当前用户
 
@@ -22,7 +22,7 @@ Python 3.11+，Linux 桌面，优先使用 X11。依赖通过 `uv sync --locked`
 
 ```bash
 python3 -m venv ~/.local/share/reed-reader-venv
-~/.local/share/reed-reader-venv/bin/pip install dist/reed_reader-0.1.0-py3-none-any.whl
+~/.local/share/reed-reader-venv/bin/pip install dist/reed_reader-0.2.0-py3-none-any.whl
 ~/.local/share/reed-reader-venv/bin/reed-reader
 ```
 
@@ -65,3 +65,7 @@ Wayland 自定义快捷键命令（若命令不在 PATH，使用完整路径）�
 本地交付不等于已经公开托管。发布到 GitHub/Gitee 时，先检查源码及本文件的功能边界，然后在用户指定的仓库推送并创建 release。不要将用户数据目录、书籍、密钥或 `.venv` 加入仓库。
 
 卸载桌面入口只需删除本项目创建的 `~/.local/bin/reed-reader`、`~/.local/share/applications/reed-reader.desktop` 和 `~/.local/share/icons/hicolor/scalable/apps/reed-reader.svg`（若设置 XDG_DATA_HOME 则使用对应位置）。保留数据即可保留书架；不会自动删除用户数据。
+
+## 微信读书（0.2.0）
+
+`reed-reader --weread` 打开独立官方网页窗口；扫码与可读范围由官网管理。Qt WebEngine 增加 Chromium 运行时依赖，首次安装体积较 0.1.0 增大。`reed-reader --quit` 正常退出并保存网页会话。更新正在运行的旧版本后，需要退出旧进程再启动新版；不会改变本地图书数据库格式。详见 [微信读书说明](weread.md)。

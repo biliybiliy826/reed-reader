@@ -1,0 +1,19 @@
+{
+  "global_f8": true,
+  "global_modified_key": true,
+  "global_middle_button": true,
+  "other_client_middle_press_release_preserved": true,
+  "observer_stop_restart": true,
+  "input_target": "owned X11 test window",
+  "production_integration": {
+    "fish_size": [
+      840,
+      130
+    ],
+    "F8_hide_repeat": true,
+    "CtrlAltH_hide_repeat": true,
+    "global_middle_hide": true,
+    "AltV_restore": true,
+    "profile": "existing user session; no account data recorded"
+  }
+}

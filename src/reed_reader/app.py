@@ -7,12 +7,13 @@ import os
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Qt, QTimer, Signal
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtCore import QEvent, QObject, Qt, QTimer, Signal
+from PySide6.QtGui import QKeySequence
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
-from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon, QWidget
 
 from .jobs import Jobs
+from .mouse_shortcut import MiddleButtonShortcut
 from .platform import GlobalKeys
 from .reader import Reader
 from .settings import Settings, config_directory, data_directory
@@ -79,20 +80,29 @@ class Application(QObject):
     def __init__(self, app, root, config):
         super().__init__()
         self.app = app
+        self.data_root = root
+        self._closing = False
         self.settings = Settings(config / "settings.json")
         self.library = Library(root / "library.sqlite3")
         self.jobs = Jobs(self)
         self.reader = Reader(self.library, self.settings, self.jobs)
+        self.web_reader = None
+        self.active_reader = self.reader
         self.window = MainWindow(self.library, self.settings, self.jobs, self.reader)
+        self.window.weread_requested.connect(self.open_weread)
         self.global_keys = GlobalKeys(self)
         self.global_keys.triggered.connect(self.action)
-        self.shortcuts = []
+        self.fallback_keys = {}
+        self._filter_refresh_pending = False
+        self.middle_button = MiddleButtonShortcut(self)
+        self.middle_button.pressed.connect(lambda: self.action("hide"))
         self.window.preferences_changed.connect(self.configure_keys)
         self.window.exit_requested.connect(self.quit)
         self.tray = QSystemTrayIcon(app_icon(), self)
         self.tray.setToolTip("苇读 · Reed Reader")
         menu = QMenu()
         menu.addAction("打开书架", self.window.show_shelf)
+        menu.addAction("微信读书", self.open_weread)
         menu.addAction("显示 / 隐藏阅读器", lambda: self.action("toggle"))
         menu.addAction("立即隐藏全部", lambda: self.action("hide"))
         menu.addSeparator()
@@ -104,32 +114,75 @@ class Application(QObject):
         if self.window.tray_available:
             self.tray.show()
         self.configure_keys()
+        self.install_input_filters()
+        self.app.focusChanged.connect(self.install_input_filters)
         if self.settings.warning:
             self.window.notify(self.settings.warning)
 
     def configure_keys(self):
-        for shortcut in self.shortcuts:
-            shortcut.setEnabled(False)
-            shortcut.deleteLater()
-        self.shortcuts = []
         prefs = self.settings.preferences
         bindings = {"previous": prefs.previous_key, "next": prefs.next_key,
-                    "toggle": prefs.toggle_key, "hide": prefs.panic_key}
+                    "toggle": prefs.toggle_key, "hide": prefs.panic_key, "hide_alt": prefs.panic_alt_key}
         status = self.global_keys.configure(bindings)
-        if self.global_keys.display is None:
-            for action, sequence in bindings.items():
-                shortcut = QShortcut(QKeySequence(sequence), self.window)
-                shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
-                shortcut.activated.connect(lambda a=action: self.action(a))
-                self.shortcuts.append(shortcut)
+        registered = set(self.global_keys.bindings.values())
+        self.fallback_keys = {QKeySequence(sequence).toString(): action for action, sequence in bindings.items()
+                              if action not in registered}
+        if prefs.global_middle_hide:
+            status += " " + self.middle_button.start()
+        else:
+            self.middle_button.close()
+            status += " 鼠标中键：仅苇读窗口内隐藏。"
         self.window.notify(status)
 
     def tray_activated(self, reason):
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self.window.show_shelf()
 
+    def install_input_filters(self, *_):
+        self._filter_refresh_pending = False
+        if self._closing:
+            return
+        # Avoid an application-wide Python filter: Qt WebEngine destroys private
+        # QObjects during reparenting, which PySide cannot safely wrap (Qt 6.12).
+        # Filter the live widgets only, including the web view's input proxy.
+        for root in QApplication.topLevelWidgets():
+            root.installEventFilter(self)
+            for child in root.findChildren(QWidget):
+                child.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if self._closing:
+            return False
+        if event.type() == QEvent.Type.ChildAdded and not self._filter_refresh_pending:
+            self._filter_refresh_pending = True
+            QTimer.singleShot(0, self.install_input_filters)
+        if event.type() == QEvent.Type.WindowActivate and watched in (self.reader, self.web_reader):
+            self.active_reader = watched
+        if event.type() == QEvent.Type.MouseButtonPress and event.button() == Qt.MouseButton.MiddleButton:
+            self.action("hide")
+            return True
+        if event.type() in (QEvent.Type.ShortcutOverride, QEvent.Type.KeyPress):
+            action = self.fallback_keys.get(QKeySequence(event.keyCombination()).toString())
+            if action:
+                event.accept()
+                if event.type() == QEvent.Type.KeyPress and not event.isAutoRepeat():
+                    self.action(action)
+                return True
+        return super().eventFilter(watched, event)
+
+    def open_weread(self):
+        if self.web_reader is None:
+            # Do not create a browser profile or make web requests during local reading.
+            from .weread_window import WeReadWindow
+
+            self.web_reader = WeReadWindow(self.settings, self.data_root)
+            self.web_reader.shelf_requested.connect(self.window.show_shelf)
+            self.install_input_filters()
+        self.active_reader = self.web_reader
+        self.web_reader.open()
+
     def action(self, command):
-        if command == "hide":
+        if command in {"hide", "hide_alt"}:
             # Hide modal/settings windows too; restoration always has an IPC/tray path.
             for widget in QApplication.topLevelWidgets():
                 if isinstance(widget, QDialog):
@@ -137,23 +190,30 @@ class Application(QObject):
                 else:
                     widget.hide()
         elif command == "toggle":
-            if self.reader.isVisible():
-                self.reader.hide()
-            elif self.reader.book_id:
-                self.reader.show()
-                self.reader.raise_()
+            target = self.active_reader
+            if target.isVisible() and not target.isMinimized():
+                target.hide()
+            elif target is self.web_reader:
+                target.open()
+            elif target.book_id:
+                target.showNormal()
+                target.raise_()
             else:
                 self.window.continue_reading()
         elif command in {"next", "previous"}:
-            self.reader.turn(1 if command == "next" else -1)
+            self.active_reader.turn(1 if command == "next" else -1)
         elif command == "mini":
-            if not self.reader.book_id:
+            if self.active_reader is self.reader and not self.reader.book_id:
                 self.window.continue_reading()
-            self.reader.toggle_mini()
+            self.active_reader.toggle_mini()
+        elif command == "weread":
+            self.open_weread()
         elif command == "demo":
             self.window.open_demo()
         elif command == "show":
             self.window.show_shelf()
+        elif command == "quit":
+            self.quit()
 
     def dispatch(self, message):
         files = message.get("files", [])
@@ -162,21 +222,34 @@ class Application(QObject):
                 self.window.import_paths([Path(p) for p in files])
                 self.window.show_shelf()
         command = message.get("command", "show")
-        if command in {"hide", "toggle", "next", "previous", "mini", "demo", "show"}:
+        if command in {"hide", "toggle", "next", "previous", "mini", "demo", "show", "weread", "quit"}:
             self.action(command)
 
     def quit(self):
+        if self._closing:
+            return
+        self._closing = True
         self.reader.save_geometry()
+        if self.web_reader is not None:
+            self.web_reader.save_geometry()
         self.settings.local["main_geometry"] = bytes(self.window.saveGeometry().toBase64()).decode()
         try:
             self.settings.save()
         except OSError as exc:
             print(f"设置保存失败：{exc}", file=sys.stderr)
         self.global_keys.close()
+        self.middle_button.close()
         self.tray.hide()
         self.app.quit()
 
     def cleanup(self):
+        self._closing = True
+        self.app.focusChanged.disconnect(self.install_input_filters)
+        self.middle_button.close()
+        self.reader.timer.stop()
+        self.window.refresh_timer.stop()
+        if self.web_reader is not None:
+            self.web_reader.shutdown()
         self.jobs.pool.clear()
         self.jobs.pool.waitForDone()
         self.global_keys.close()
@@ -187,7 +260,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="苇读 · Linux 原生轻量阅读器")
     parser.add_argument("files", nargs="*", help="导入 TXT / EPUB / MOBI")
     group = parser.add_mutually_exclusive_group()
-    for action in ("toggle", "hide", "next", "previous", "show", "mini", "demo"):
+    for action in ("toggle", "hide", "next", "previous", "show", "mini", "demo", "weread", "quit"):
         group.add_argument("--" + action, action="store_true")
     parser.add_argument("--data-dir", type=Path, help="使用独立数据目录（测试/便携模式）")
     args = parser.parse_args(argv)
@@ -201,10 +274,12 @@ def main(argv=None):
     app.setQuitOnLastWindowClosed(False)
     app.setWindowIcon(app_icon())
     app.setStyleSheet(STYLE)
-    command = next((a for a in ("toggle", "hide", "next", "previous", "show", "mini", "demo") if getattr(args, a)), "show")
+    command = next((a for a in ("toggle", "hide", "next", "previous", "show", "mini", "demo", "weread", "quit") if getattr(args, a)), "show")
     name = "reed-reader-" + hashlib.sha256(f"{os.getuid()}:{root}".encode()).hexdigest()[:20]
     message = {"command": command, "files": [str(Path(p).expanduser().resolve()) for p in args.files]}
     if forward(name, message):
+        return 0
+    if command == "quit":
         return 0
     if command in {"hide", "next", "previous"}:
         print("苇读尚未运行。", file=sys.stderr)

@@ -29,8 +29,9 @@ def key_spec(sequence: str):
     names = {"Space": "space", "Esc": "Escape", "PgUp": "Prior", "PgDown": "Next", "Del": "Delete"}
     key = names.get(key, key.lower() if len(key) == 1 else key)
     symbol = XK.string_to_keysym(key)
-    if not symbol or not mask:
-        raise ValueError("全局快捷键需要 Ctrl / Alt / Shift / Meta 修饰键和一个有效按键。")
+    function_key = key in {f"F{i}" for i in range(1, 13)}
+    if not symbol or (not mask and not function_key):
+        raise ValueError("快捷键需要修饰键和有效按键，或单独使用 F1–F12。")
     return symbol, mask
 
 
@@ -65,15 +66,22 @@ class GlobalKeys(QObject):
                 code = self.display.keysym_to_keycode(symbol)
                 if not code:
                     raise ValueError(f"键盘不支持：{sequence}")
-                self.bindings[(code, mask)] = action
+                failed = []
                 for extra in {0, X.LockMask, num_mask, X.LockMask | num_mask}:
                     root.grab_key(code, mask | extra, False, X.GrabModeAsync, X.GrabModeAsync,
-                                  onerror=lambda error, request, seq=sequence: failures.append(seq))
-            self.display.sync()
-            if failures:
-                raise ValueError("快捷键被其他程序占用：" + ", ".join(sorted(set(failures))))
+                                  onerror=lambda error, request, errors=failed: errors.append(True))
+                self.display.sync()
+                if failed:
+                    failures.append(sequence)
+                    for extra in {0, X.LockMask, num_mask, X.LockMask | num_mask}:
+                        root.ungrab_key(code, mask | extra)
+                    self.display.sync()
+                else:
+                    self.bindings[(code, mask)] = action
             self.notifier = QSocketNotifier(self.display.fileno(), QSocketNotifier.Type.Read, self)
             self.notifier.activated.connect(self._drain)
+            if failures:
+                return "部分全局快捷键被占用，仅在应用内生效：" + ", ".join(failures)
             return "X11 全局快捷键已启用。"
         except Exception as exc:
             self.close()

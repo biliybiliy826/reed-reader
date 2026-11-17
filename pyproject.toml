@@ -4,14 +4,15 @@ build-backend = "hatchling.build"
 
 [project]
 name = "reed-reader"
-version = "0.1.0"
+version = "0.2.0"
 description = "苇读 — Linux 原生、离线优先的轻量隐蔽阅读器"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "GPL-3.0-only"
 authors = [{name = "Reed Reader contributors"}]
 dependencies = [
-  "PySide6-Essentials>=6.8,<7",
+  "PySide6-Essentials>=6.12,<7",
+  "PySide6-WebEngine>=6.12,<7",
   "charset-normalizer>=3.4,<4",
   "defusedxml>=0.7,<1",
   "mobi==0.4.1",

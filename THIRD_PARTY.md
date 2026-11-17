@@ -6,7 +6,7 @@
 
 | 依赖 | 用途 | 上游许可证 |
 | --- | --- | --- |
-| PySide6-Essentials / Shiboken6 | Qt 原生桌面界面 | LGPL-3.0 / GPL-2.0 / GPL-3.0 或商业许可（按上游文件） |
+| PySide6-Essentials / Addons / WebEngine / Shiboken6 | Qt 原生桌面界面与官方网页浏览器 | LGPL-3.0 / GPL-2.0 / GPL-3.0 或商业许可（按上游文件） |
 | mobi 0.4.1 / KindleUnpack | 无 DRM MOBI 解码 | GPL-3.0-only |
 | charset-normalizer | 文本编码识别 | MIT |
 | defusedxml | XML 实体防护 | PSF |
@@ -16,3 +16,5 @@
 | standard-imghdr（mobi 依赖） | Python 3.13+ 图像格式兼容 | PSF |
 
 本次分发是源代码包和应用 wheel，不捆绑 Qt 或 Python 二进制运行时。
+
+微信读书页面、标识和书籍由其官方服务器在运行时提供，不随本项目源代码或 wheel 分发。浏览器内核含 Chromium 等上游第三方组件，相关许可证与声明由 PySide6-WebEngine 包提供。
