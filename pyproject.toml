@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "reed-reader"
 version = "0.2.0"
-description = "苇读 — Linux 原生、离线优先的轻量隐蔽阅读器"
+description = "苇读 — Linux 摸鱼阅读器：透明文字悬浮、一键隐藏，支持微信读书"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "GPL-3.0-only"
@@ -21,6 +21,11 @@ dependencies = [
 
 [project.scripts]
 reed-reader = "reed_reader.app:main"
+
+[project.urls]
+Homepage = "https://github.com/biliybiliy826/reed-reader"
+Repository = "https://github.com/biliybiliy826/reed-reader"
+Issues = "https://github.com/biliybiliy826/reed-reader/issues"
 
 [dependency-groups]
 dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.11", "build>=1.2"]

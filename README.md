@@ -1,17 +1,25 @@
 # 苇读 · Reed Reader
 
-一个适用于 Linux 的原生轻量阅读器。独立实现 Fish-book 官网公开介绍的主要功能，以透明小窗、离线阅读和快速隐藏为核心。不是 Fish-book 官方版本；没有使用其代码、品牌图案或素材。
+**专为 Linux 打造的摸鱼阅读器：透明文字悬浮、一键隐藏，支持微信读书。**
+
+A stealth reader for Linux — read novels discreetly at work, with transparent overlays, instant hide shortcuts, and WeRead integration.
+
+让小说以几行文字浮在工作窗口上，按鼠标中键或 F8 立即隐藏，Alt+V 恢复阅读。支持本地电子书和微信读书官方网页版。
+
+独立实现 Fish-book 官网公开介绍的主要功能。不是 Fish-book 官方版本；没有使用其代码、品牌图案或素材。
 
 项目以 **GPL-3.0-only** 开源，完整许可证见 [LICENSE](LICENSE)。
 
-![苇读书架](docs/screenshots/bookshelf.png)
+![微信读书透明文字条效果（原创演示文本）](docs/screenshots/weread-fish-demo.png)
 
-![透明小窗](docs/screenshots/mini.png)
+![苇读书架](docs/screenshots/bookshelf.png)
 
 ## 开始使用
 
 ```bash
 # 需要 Python 3.11+ 和 uv
+git clone https://github.com/biliybiliy826/reed-reader.git
+cd reed-reader
 uv sync
 uv run reed-reader
 # 体验随附原创示例

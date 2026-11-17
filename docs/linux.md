@@ -62,7 +62,7 @@ Wayland 自定义快捷键命令（若命令不在 PATH，使用完整路径）�
 
 `uv build` 生成带 LICENSE 的源码 tar.gz 和应用 wheel。源码包包含测试、锁文件、文档、安装脚本和 GitHub Actions 工作流。源码按 GPL-3.0-only 许可；依赖说明见 `THIRD_PARTY.md`。
 
-本地交付不等于已经公开托管。发布到 GitHub/Gitee 时，先检查源码及本文件的功能边界，然后在用户指定的仓库推送并创建 release。不要将用户数据目录、书籍、密钥或 `.venv` 加入仓库。
+公开源码仓库：[biliybiliy826/reed-reader](https://github.com/biliybiliy826/reed-reader)。版本使用 Git 标签标记；可从对应标签下载源码并按上述步骤安装。不要将用户数据目录、书籍、密钥或 `.venv` 加入仓库。
 
 卸载桌面入口只需删除本项目创建的 `~/.local/bin/reed-reader`、`~/.local/share/applications/reed-reader.desktop` 和 `~/.local/share/icons/hicolor/scalable/apps/reed-reader.svg`（若设置 XDG_DATA_HOME 则使用对应位置）。保留数据即可保留书架；不会自动删除用户数据。
 
