@@ -73,6 +73,9 @@ def main():
     if list(output.iterdir()):
         raise SystemExit("Output directory must be empty; choose a fresh --output-dir.")
     run("uv", "build", "--out-dir", output)
+    # uv creates a hidden .gitignore in its output directory. It is build
+    # housekeeping, not a release asset (GitHub artifacts exclude hidden files).
+    (output / ".gitignore").unlink(missing_ok=True)
     wheel = output / f"reed_reader-{version}-py3-none-any.whl"
     bundle = work / f"reed-reader-{version}-linux-x86_64"
     build_runtime(bundle, work, wheel, version)
