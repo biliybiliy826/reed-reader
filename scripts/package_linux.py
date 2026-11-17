@@ -51,7 +51,10 @@ Description: Stealth reader for Linux with WeRead integration
                 checksums.append(f"{hashlib.file_digest(source, 'md5').hexdigest()}  {path.relative_to(staging)}")
     (staging / "DEBIAN/md5sums").write_text("\n".join(checksums) + "\n")
     archive = output / f"reed-reader_{version}_amd64.deb"
-    run("dpkg-deb", "--root-owner-group", "-Zxz", "-z6", "--threads-max=2", "--build", staging, archive)
+    # Ubuntu 22.04's dpkg predates --threads-max. Newer dpkg honors the env
+    # limit; older versions safely retain their default compressor behavior.
+    run("dpkg-deb", "--root-owner-group", "-Zxz", "-z6", "--build", staging, archive,
+        env={**os.environ, "DPKG_DEB_THREADS_MAX": "2"})
     return archive
 
 
@@ -92,7 +95,7 @@ def main():
     shutil.copy2(bundle / "build-manifest.json", output / "build-manifest.json")
     # An easy-to-find source/notice index accompanies the binary downloads.
     shutil.copy2(bundle / "licenses/SOURCES.md", output / "THIRD_PARTY_SOURCES.md")
-    for source in (work / "upstream-sources").glob("*.tar.xz"):
+    for source in (work / "upstream-sources").glob("*.tar.*"):
         shutil.copy2(source, output / source.name)
     sums = []
     for path in sorted(output.iterdir()):

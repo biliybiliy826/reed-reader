@@ -78,6 +78,18 @@ def source_notices(bundle: Path, python_root: Path, cache: Path, version: str):
     notices = [p for p in (licenses / "Qt-third-party").rglob("*") if p.is_file()]
     if len(notices) < 100 or not any("chromium" in str(p).lower() for p in notices):
         raise RuntimeError("Qt source archive is missing expected third-party/Chromium notices")
+    python_build = upstream["python_build"]
+    python_sources = f"https://codeload.github.com/astral-sh/python-build-standalone/tar.gz/refs/tags/{python_build}"
+    python_archive = cache / f"python-build-standalone-{python_build}.tar.gz"
+    python_sources_hash = fetch(python_sources, python_archive, upstream["python_build_sources_sha256"])
+    python_notices = licenses / "Python-third-party"
+    python_notices.mkdir()
+    with tarfile.open(python_archive) as source:
+        for member in source:
+            if member.isfile() and Path(member.name).name.startswith("LICENSE"):
+                target = python_notices / Path(member.name).name
+                with source.extractfile(member) as src, target.open("wb") as dst:
+                    shutil.copyfileobj(src, dst)
     for filename in ("LICENSE", "THIRD_PARTY.md", "uv.lock"):
         shutil.copy2(PROJECT / filename, bundle / filename)
     shutil.copy2(python_root / "lib/python3.13/LICENSE.txt", licenses / "Python.txt")
@@ -107,7 +119,8 @@ print(json.dumps(sorted([{'name':d.metadata['Name'],'version':d.version} for d i
          "url": f"https://www.python.org/ftp/python/{PYTHON_VERSION}/Python-{PYTHON_VERSION}.tar.xz"},
         {"name": "python-build-standalone build recipes and dependency versions",
          "version": (python_root / "BUILD").read_text().strip(),
-         "url": "https://github.com/astral-sh/python-build-standalone/tree/" + (python_root / "BUILD").read_text().strip()},
+         "url": python_sources, "hash": "sha256:" + python_sources_hash,
+         "release_asset": python_archive.name},
     ]
     manifest = {"application": version, "architecture": "x86_64", "python": PYTHON_VERSION,
                 "python_build": (python_root / "BUILD").read_text().strip(),
@@ -123,7 +136,8 @@ print(json.dumps(sorted([{'name':d.metadata['Name'],'version':d.version} for d i
         "at the following upstream locations; exact dependency hashes are in uv.lock. "
         "Wheel license files remain in each *.dist-info directory. "
         "Qt license texts are in Qt-PySide; bundled third-party notices (including Chromium) "
-        "are in Qt-third-party. The complete Qt source archive is also attached to the Release.\n\n"
+        "are in Qt-third-party. CPython's compiled dependency notices are in Python-third-party. "
+        "The complete Qt source archive and standalone Python build recipes are attached to the Release.\n\n"
         + "\n".join(f"- {p['name']} {p['version']}: {p['url']}" for p in sources) + "\n")
 
 

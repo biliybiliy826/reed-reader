@@ -42,6 +42,10 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: QT_QPA_PLATFORM=offscreen uv run pytest -q
+      - uses: actions/cache@v4
+        with:
+          path: build/linux-package/upstream-sources
+          key: linux-upstream-sources-${{ hashFiles('packaging/upstream-sources.json') }}
       - name: Build and verify relocatable packages
         run: uv run python scripts/package_linux.py
       - uses: actions/upload-artifact@v4
